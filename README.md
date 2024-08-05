@@ -50,7 +50,11 @@ own CNAME for a given domain.
 ```ruby
 class User < ActiveRecord::Base
   attr_accessible :domain
-  validates :domain, :domain => {:verify_dns => true, :same_ip_as => "domains.myservice.com"}
+  validates :domain, :domain => {
+    :verify_dns => {
+      :same_ip_as => "domains.myservice.com"
+    }
+  }
 
   # Also supports different messages for missing or incorrect DNS records
   # validates :domain, :domain => {
@@ -75,6 +79,42 @@ class User < ActiveRecord::Base
       :same_ip_as => lambda { SomeLazy.config.domain }
     }
   }
+end
+```
+
+DomainValidator can also check that the presence of a verification TXT
+record with a given prefix and value. This can be used to verify
+domain ownership. `value` can be a callable that receives the model.
+
+In the following example, when `domain` is set to `some.example.com`,
+the validator looks for a TXT record of the form
+`_my-site-verification.some.example.com` with the verification code as
+value..
+
+```ruby
+class User < ActiveRecord::Base
+  # Assuming User has a site_verification_code attribute
+  validates :domain,
+            :domain => {
+              :verify_dns => {
+                :verification_txt_record => {
+                  :prefix => "_my-site-verification.",
+                  :value => lambda { |user| user.verification_code }
+                }
+              }
+            }
+
+  # Also supports different messages for missing or incorrect DNS records
+  # validates :domain, :domain => {
+  #   :verify_dns => {
+  #     :verification_txt_record => {
+  #       :prefix => "_my_site_verification.",
+  #       :value => lambda { |user| user.verification_code }
+  #     },
+  #     :missing_dns_record => "DNS record not found",
+  #     :missing_txt_record => "Make sure the verification TXT record exists."
+  #   }
+  # }
 end
 ```
 

@@ -60,3 +60,52 @@ class UserVerifyExampleDotComWithSpecificMessages < Model
     }
   }
 end
+
+class UserVerifyTxtRecord < Model
+  validates :domain, :domain => {
+      :verify_dns => {
+        :verification_txt_record => {
+          prefix: "_verification.",
+          value: "d2adb9c6601a93b805e0dbd2638e084d"
+        }
+      }
+    }
+end
+
+class UserVerifyTxtRecordFromCallable < Model
+  attribute :txt_record, :string
+
+  validates :domain, :domain => {
+      :verify_dns => {
+        :verification_txt_record => {
+          prefix: "_verification.",
+          value: ->(record) { record.txt_record }
+        }
+      }
+    }
+end
+
+class UserVerifyTxtRecordWithMessage < Model
+  validates :domain, :domain => {
+      :verify_dns => {
+        :verification_txt_record => {
+          prefix: "_verification.",
+          value: "d2adb9c6601a93b805e0dbd2638e084d"
+        },
+        :message => "failed DNS check"
+      }
+    }
+end
+
+class UserVerifyTxtRecordWithSpecificMessages < Model
+  validates :domain, :domain => {
+      :verify_dns => {
+        :verification_txt_record => {
+          prefix: "_verification.",
+          value: "d2adb9c6601a93b805e0dbd2638e084d"
+        },
+        :missing_dns_record => "missing record",
+        :missing_txt_record => "missing txt record"
+      }
+    }
+end

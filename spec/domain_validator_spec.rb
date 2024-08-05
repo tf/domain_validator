@@ -182,7 +182,82 @@ describe DomainValidator do
           end
         end
       end
+    end
 
+    context "when :verifiy_dns has a :verification_txt_record option" do
+      context "when :verfiy_dns does not have a message option" do
+        context "with a domain without a DNS record" do
+          subject { UserVerifyTxtRecord.new :domain => "a.com" }
+
+          it "should add the default message" do
+            subject.valid?
+            expect(subject.errors[:domain]).to include "does not have a valid DNS record"
+          end
+
+          it "should prefer localized message" do
+            with_error_translation(subject, :missing_dns_record, "dns not right") do
+              subject.valid?
+              expect(subject.errors[:domain]).to include "dns not right"
+            end
+          end
+        end
+
+        context "with a domain with missing txt record" do
+          subject { UserVerifyTxtRecord.new :domain => "rubygems.org" }
+
+          it "should add the default message" do
+            subject.valid?
+            expect(subject.errors[:domain]).to include "does not have a valid DNS record"
+          end
+
+          it "should prefer localized message" do
+            with_error_translation(subject, :missing_txt_record, "txt record missing") do
+              subject.valid?
+              expect(subject.errors[:domain]).to include "txt record missing"
+            end
+          end
+        end
+      end
+
+      context "when :verfiy_dns has a message option" do
+        context "with a domain without a DNS record" do
+          subject { UserVerifyTxtRecordWithMessage.new :domain => "a.com" }
+          before { subject.valid? }
+
+          it "should add the customized message" do
+            expect(subject.errors[:domain]).to include "failed DNS check"
+          end
+        end
+
+        context "with a domain with missing txt record" do
+          subject { UserVerifyTxtRecordWithMessage.new :domain => "rubygems.org" }
+          before { subject.valid? }
+
+          it "should add the customized message" do
+            expect(subject.errors[:domain]).to include "failed DNS check"
+          end
+        end
+      end
+
+      context "when :verfiy_dns has specific message options" do
+        context "with a domain without a DNS record" do
+          subject { UserVerifyTxtRecordWithSpecificMessages.new :domain => "a.com" }
+          before { subject.valid? }
+
+          it "should add the customized message" do
+            expect(subject.errors[:domain]).to include "missing record"
+          end
+        end
+
+        context "with a domain with missing txt record" do
+          subject { UserVerifyTxtRecordWithSpecificMessages.new :domain => "rubygems.org" }
+          before { subject.valid? }
+
+          it "should add the invalid_record message" do
+            expect(subject.errors[:domain]).to include "missing txt record"
+          end
+        end
+      end
     end
   end
 
@@ -219,6 +294,32 @@ describe DomainValidator do
 
         it "should not be valid domain resolves to different ip" do
           user = UserVerifyExampleDotCom.new(:domain => "rubygems.org")
+          expect(user).not_to be_valid
+        end
+      end
+
+      describe "when :verifiy_dns has :verification_txt_record option" do
+        it "should be valid when domain has matching txt record" do
+          user = UserVerifyTxtRecord.new(:domain => "domain-validator-test-fixture.codevise.dev")
+          expect(user).to be_valid
+        end
+
+        it "should not be valid when domain has no matching txt record" do
+          user = UserVerifyTxtRecord.new(:domain => "www.example.com")
+          expect(user).not_to be_valid
+        end
+      end
+
+      describe "when :verifiy_dns has callable :value option" do
+        it "should be valid when domain has matching txt record" do
+          user = UserVerifyTxtRecordFromCallable.new(:domain => "domain-validator-test-fixture.codevise.dev",
+                                                     :txt_record => "d2adb9c6601a93b805e0dbd2638e084d")
+          expect(user).to be_valid
+        end
+
+        it "should not be valid when domain has no matching txt record" do
+          user = UserVerifyTxtRecordFromCallable.new(:domain => "domain-validator-test-fixture.codevise.dev",
+                                                     :txt_record => 'not-there')
           expect(user).not_to be_valid
         end
       end

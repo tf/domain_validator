@@ -24,7 +24,7 @@ module DomainValidator
     end
 
     def validate_domain_dns(record, attr_name, value)
-      issue = detect_dns_issues(value)
+      issue = detect_dns_issues(record, value)
       record.errors.add(attr_name, issue, message: dns_message(issue)) if issue
     end
 
@@ -32,9 +32,9 @@ module DomainValidator
       domain =~ RE_DOMAIN
     end
 
-    def detect_dns_issues(domain)
+    def detect_dns_issues(record, domain)
       dns_options = options[:verify_dns].is_a?(Hash) ? options[:verify_dns] : {}
-      options[:verify_dns] ? DnsCheck.detect_issues(domain, dns_options) : nil
+      options[:verify_dns] ? DnsCheck.detect_issues(domain, {context: record, **dns_options}) : nil
     end
 
     def invalid_domain_message

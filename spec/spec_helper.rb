@@ -6,15 +6,10 @@ require 'rspec'
 require 'active_model'
 
 class Model
-  include ActiveModel::Validations
+  include ActiveModel::Model
+  include ActiveModel::Attributes
 
-  def initialize(attrs = {})
-    @attributes = attrs
-  end
-
-  def read_attribute_for_validation(key)
-    @attributes[key]
-  end
+  attribute :domain, :string
 end
 
 RSpec.configure do |c|
